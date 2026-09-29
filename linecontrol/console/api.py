@@ -139,6 +139,14 @@ class Api:
     def events(self, request: Request) -> dict[str, object]:
         return {"ok": True, "events": self.stream_view()}
 
+    def recovery_holds(self, request: Request) -> dict[str, object]:
+        return {
+            "ok": True,
+            "restricted": bool(self.line.holds()),
+            "holds": [hold.to_dict() for hold in self.line.holds()],
+            "health": self.line.health().to_dict(),
+        }
+
     def audit(self, request: Request) -> dict[str, object]:
         limit = int_param(request, "limit", DEFAULT_AUDIT_LIMIT)
         raw_kind = request.args.get("kind", "")
@@ -167,6 +175,17 @@ class Api:
         return {"ok": True, "eta": self.line.track_eta(float_param(request, "target"))}
 
     # -- write endpoints ------------------------------------------------
+
+    def recovery_confirm(self, request: Request) -> dict[str, object]:
+        code = request.args.get("code", "")
+        if not code:
+            raise ApiParamError("code", code)
+        remaining = self.line.confirm_hold(code, request.args.get("note", ""))
+        return {
+            "ok": True,
+            "phase": self.line.phase.value,
+            "remaining": [hold.to_dict() for hold in remaining],
+        }
 
     def weld_confirm(self, request: Request) -> dict[str, object]:
         self.line.weld_and_speedup()

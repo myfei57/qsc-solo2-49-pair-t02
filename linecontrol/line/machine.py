@@ -18,6 +18,8 @@ from ..tension.roller import Roller
 from ..weld.welder import Welder
 from ..store.backup import BackupSummary
 from .commands import CommandOps
+from .health import Finding, HealthReport
+from .holds import HoldOps
 from .recovery import RecoveryOps
 from .sequence import Sequence
 from .view import ViewOps
@@ -27,7 +29,7 @@ from .workflow import WorkflowOps
 DEFAULT_SETPOINT = 80.0
 
 
-class Line(WorkflowOps, CommandOps, RecoveryOps, ViewOps):
+class Line(WorkflowOps, CommandOps, RecoveryOps, ViewOps, HoldOps):
     """Owns the equipment areas and the cross-area call chains."""
 
     def __init__(self, data_dir: str | Path) -> None:
@@ -49,6 +51,8 @@ class Line(WorkflowOps, CommandOps, RecoveryOps, ViewOps):
         self.handle = ""
         self.seq = Sequence()
         self.last_backup: BackupSummary | None = None
+        self._holds: list[Finding] = []
+        self._health = HealthReport()
         self._audit_unsubscribe = self.subscribe(self.audit.record)
 
     def set_phase(self, phase: Phase) -> None:

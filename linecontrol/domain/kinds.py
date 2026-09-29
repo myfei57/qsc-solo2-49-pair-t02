@@ -23,6 +23,7 @@ class EventKind(str, Enum):
     RECOVER = "recover"
     STOP = "stop"
     AUDIT = "audit"
+    HOLD = "hold"
 
     def __str__(self) -> str:  # pragma: no cover - trivial formatting helper
         return self.value
@@ -47,4 +48,5 @@ STREAM_KINDS: tuple[EventKind, ...] = (
     EventKind.RECOVER,
     EventKind.STOP,
     EventKind.AUDIT,
+    EventKind.HOLD,
 )

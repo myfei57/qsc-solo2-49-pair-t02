@@ -38,6 +38,9 @@ class ViewOps:
         voltage, current = self.weld.power_state()
         return {
             "phase": self.phase.value,
+            "restricted": bool(self.holds()),
+            "holds": [hold.to_dict() for hold in self.holds()],
+            "health": self.health().to_dict(),
             "coilNo": self.coil_no,
             "handle": self.handle,
             "coil": self.entry.coil_id(),

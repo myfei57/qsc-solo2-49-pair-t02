@@ -38,6 +38,10 @@ header h1 {
   background: #c0392b;
 }
 
+.badge.restricted {
+  background: #d97706;
+}
+
 .tabs {
   display: flex;
   gap: 8px;
@@ -143,6 +147,40 @@ main {
 .alarms li.clear {
   background: #e6ffed;
   border-left-color: #1f9d55;
+}
+
+.holds {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.holds li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  background: #fef3c7;
+  border-left: 4px solid #d97706;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.holds button {
+  flex: none;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: #1565c0;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.holds button:hover {
+  background: #0d47a1;
 }
 
 .summary li {

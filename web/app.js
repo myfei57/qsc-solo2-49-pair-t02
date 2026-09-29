@@ -44,7 +44,8 @@ function setText(id, value) {
 function renderState(state) {
   const badge = document.getElementById("phase");
   badge.textContent = state.phase || "idle";
-  badge.className = "badge " + (state.phase === "fault" ? "fault" : "running");
+  const mode = state.phase === "fault" ? "fault" : (state.phase === "restricted" ? "restricted" : "running");
+  badge.className = "badge " + mode;
   setText("coil", state.coil || "-");
   setText("head", fmt(state.head, 1));
   setText("aligned", state.aligned ? "已确认" : "未确认");
@@ -85,6 +86,37 @@ function renderState(state) {
       alarms.appendChild(li);
     });
   }
+}
+
+function renderHolds(state) {
+  const panel = document.getElementById("holdPanel");
+  const list = document.getElementById("holdList");
+  const holds = state.holds || [];
+  list.innerHTML = "";
+  if (!holds.length) {
+    panel.classList.add("hidden");
+    return;
+  }
+  panel.classList.remove("hidden");
+  holds.forEach(function (hold) {
+    const li = document.createElement("li");
+    const text = document.createElement("span");
+    text.textContent = "[" + hold.area + "] " + hold.message +
+      "（应为 " + hold.expected + "，实际 " + hold.actual + "）";
+    const button = document.createElement("button");
+    button.textContent = "确认";
+    button.addEventListener("click", async function () {
+      try {
+        await post("/api/recovery/confirm", { code: hold.code });
+        await refresh();
+      } catch (error) {
+        window.alert(error.message);
+      }
+    });
+    li.appendChild(text);
+    li.appendChild(button);
+    list.appendChild(li);
+  });
 }
 
 function renderEvents(events) {
@@ -129,6 +161,7 @@ async function refresh() {
   try {
     const data = await loadJSON("/api/state");
     renderState(data.state || {});
+    renderHolds(data.state || {});
     renderSequence(data.state ? data.state.sequence : null);
     const summary = await loadJSON("/api/audit/summary");
     renderSummary(summary.summary || {});

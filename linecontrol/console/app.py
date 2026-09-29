@@ -32,6 +32,8 @@ def _route_table(api: Api) -> tuple[tuple[str, str, Handler], ...]:
         ("/api/bus", "GET", api.bus_view),
         ("/api/store", "GET", api.store_view),
         ("/api/events", "GET", api.events),
+        ("/api/recovery/holds", "GET", api.recovery_holds),
+        ("/api/recovery/confirm", "POST", api.recovery_confirm),
         ("/api/audit", "GET", api.audit),
         ("/api/audit/summary", "GET", api.audit_summary),
         ("/api/weld/confirm", "POST", api.weld_confirm),

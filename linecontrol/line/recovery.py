@@ -6,6 +6,7 @@ from ..domain.events import Event
 from ..domain.kinds import EventKind
 from ..domain.phase import Phase
 from ..store.recovery import Recovery, collect
+from .health import inspect
 
 
 class RecoveryOps:
@@ -37,5 +38,6 @@ class RecoveryOps:
             self.pickle.rinse_stop()
         self.exit.recover_lift()
         self.bus.publish(Event(kind=EventKind.RECOVER, source="line", message="recovered"))
-        self.set_phase(Phase.IDLE)
+        self._apply_health(inspect(state))
+        self.set_phase(Phase.RESTRICTED if self.holds() else Phase.IDLE)
         return state

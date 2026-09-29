@@ -44,6 +44,7 @@ class CommandOps:
         self.entry.push_sample(value)
 
     def ramp_speed(self, target: float) -> RampPlan:
+        self._require_ready()
         plan = self.tension.plan_speedup(target)
         for step in plan.steps:
             self.tension.apply_step(step)
@@ -61,6 +62,7 @@ class CommandOps:
         return plan
 
     def resume_acid_loop(self, sample: float) -> None:
+        self._require_ready()
         self.pickle.level_check(sample)
         self.pump.resume()
 
@@ -82,6 +84,7 @@ class CommandOps:
         self.weld.set_power(voltage, current)
 
     def set_strip_speed(self, speed: float) -> None:
+        self._require_ready()
         self.strip.set_speed(speed)
 
     def advance_strip(self, delta: float) -> float:

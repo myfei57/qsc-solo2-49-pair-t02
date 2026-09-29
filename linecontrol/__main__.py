@@ -25,9 +25,15 @@ def main(argv: list[str] | None = None) -> int:
 
     line = Line(config.data_root())
     recovery = line.recover()
-    logging.getLogger("linecontrol").info(
-        "recovered %d snapshots", len(recovery.loaded)
-    )
+    log = logging.getLogger("linecontrol")
+    log.info("recovered %d snapshots", len(recovery.loaded))
+    holds = line.holds()
+    if holds:
+        log.warning(
+            "health check raised %d hold(s); line restricted until confirmed: %s",
+            len(holds),
+            ", ".join(hold.code for hold in holds),
+        )
     app = create_app(line, config.web_root())
     serve(config, app)
     return 0

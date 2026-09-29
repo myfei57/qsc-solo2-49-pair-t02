@@ -35,6 +35,7 @@ class WorkflowOps:
     """Mixed into :class:`~linecontrol.line.machine.Line`."""
 
     def load_coil(self, coil_id: str, target: float) -> None:
+        self._require_ready()
         self.coil_no += 1
         self.handle = self.audit.new_handle()
         self.entry.load_coil(coil_id, target)
@@ -48,6 +49,7 @@ class WorkflowOps:
         with rather than at whatever the previous seam used.
         """
 
+        self._require_ready()
         self.seq.begin_if_idle("weld-and-speedup")
         self.set_phase(Phase.ALIGNING)
         try:
@@ -80,6 +82,7 @@ class WorkflowOps:
         allowed to cut.
         """
 
+        self._require_ready()
         try:
             self.entry.align_refresh(position)
             self.weld.set_line_speed(self.strip.speed())
@@ -93,6 +96,7 @@ class WorkflowOps:
     def start_acid_loop(self, sample: float) -> None:
         """Confirm the level, start the pump and open the rinse valve."""
 
+        self._require_ready()
         try:
             self.pickle.level_check(sample)
             self.seq.record("level-check")
@@ -111,6 +115,7 @@ class WorkflowOps:
     def heat_dryer_and_coil(self) -> None:
         """Establish exhaust, heat the dryer and run a coil change."""
 
+        self._require_ready()
         try:
             self.exit.exhaust_establish()
             self.seq.record("exhaust")
@@ -126,6 +131,7 @@ class WorkflowOps:
             raise
 
     def coil_change(self) -> None:
+        self._require_ready()
         try:
             self.exit.coil_change()
             self.entry.coil_change()
@@ -161,6 +167,7 @@ class WorkflowOps:
     def production_cycle(self, payload: CycleInput) -> None:
         """Run load, weld, acid loop, dry and stop as one sequence."""
 
+        self._require_ready()
         self.seq.begin("production")
         self.load_coil(payload.coil_id, payload.target)
         self.seq.record("stage:load-coil")
