@@ -42,3 +42,17 @@ class ConcentrationOps:
     def restore_acid(self, snapshot: AcidSnapshot) -> None:
         self.data.level = snapshot.level
         self.data.offset = snapshot.offset
+
+    def commit_level(self, level: float) -> None:
+        """Adopt an operator-confirmed field level and persist it."""
+
+        self.data.level = float(level)
+        save_json(
+            self.store,
+            KEY_ACID,
+            AcidSnapshot(
+                level=self.data.level,
+                offset=self.data.offset,
+                saved=utcnow(),
+            ),
+        )

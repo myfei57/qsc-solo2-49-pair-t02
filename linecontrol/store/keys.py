@@ -11,3 +11,8 @@ KEY_WELD = "weld.record"
 SEAM_PREFIX = "weld.seam."
 KEY_EVENTS = "audit.events"
 KEY_HOURS = "pump.hours"
+
+#: Field readings uploaded at start-up for the recovery health check.
+KEY_FIELD = "field.report"
+#: Outcome of the latest start-up health check, including pending items.
+KEY_HEALTH = "recover.health"

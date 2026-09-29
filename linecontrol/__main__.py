@@ -25,9 +25,25 @@ def main(argv: list[str] | None = None) -> int:
 
     line = Line(config.data_root())
     recovery = line.recover()
-    logging.getLogger("linecontrol").info(
-        "recovered %d snapshots", len(recovery.loaded)
-    )
+    logger = logging.getLogger("linecontrol")
+    if line.health.restricted():
+        logger.warning(
+            "line RESTRICTED: %d blocking item(s) await field confirmation",
+            len(line.health.blocking_pending()),
+        )
+        for item in line.health.pending():
+            logger.warning(
+                "  [%s] %s: %s (expected %s, actual %s)",
+                item.severity.value,
+                item.id,
+                item.detail,
+                item.expected,
+                item.actual,
+            )
+    else:
+        logger.info(
+            "recovered %d snapshots, no blocking items", len(recovery.loaded)
+        )
     app = create_app(line, config.web_root())
     serve(config, app)
     return 0

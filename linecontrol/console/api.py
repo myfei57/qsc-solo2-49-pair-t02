@@ -6,6 +6,7 @@ from flask import Request
 
 from ..domain.events import Event
 from ..domain.kinds import EventKind
+from ..domain.records import FieldReport
 from ..line.machine import Line
 from ..line.workflow import CycleInput
 from ..store.snapshot import snapshot_type_names
@@ -47,6 +48,28 @@ def int_param(request: Request, name: str, default: int) -> int:
         return int(raw)
     except ValueError as error:
         raise ApiParamError(name, raw) from error
+
+
+def optional_float_param(request: Request, name: str) -> float | None:
+    raw = request.args.get(name, "")
+    if raw == "":
+        return None
+    try:
+        return float(raw)
+    except ValueError as error:
+        raise ApiParamError(name, raw) from error
+
+
+def optional_bool_param(request: Request, name: str) -> bool | None:
+    raw = request.args.get(name, "")
+    if raw == "":
+        return None
+    lowered = raw.lower()
+    if lowered in ("1", "true", "yes", "on"):
+        return True
+    if lowered in ("0", "false", "no", "off"):
+        return False
+    raise ApiParamError(name, raw)
 
 
 class Api:
@@ -167,6 +190,33 @@ class Api:
         return {"ok": True, "eta": self.line.track_eta(float_param(request, "target"))}
 
     # -- write endpoints ------------------------------------------------
+
+    def health_view(self, request: Request) -> dict[str, object]:
+        return {"ok": True, "health": self.line.health_view()}
+
+    def health_field(self, request: Request) -> dict[str, object]:
+        report = FieldReport(
+            tension=optional_float_param(request, "tension"),
+            gain=optional_float_param(request, "gain"),
+            pump_running=optional_bool_param(request, "pumpRunning"),
+            rinse_active=optional_bool_param(request, "rinseActive"),
+            acid_level=optional_float_param(request, "acidLevel"),
+            track_position=optional_float_param(request, "trackPosition"),
+            weld_latch=optional_bool_param(request, "weldLatch"),
+            weld_alarm=optional_bool_param(request, "weldAlarm"),
+        )
+        health = self.line.accept_field_report(report)
+        return {"ok": True, "health": health}
+
+    def health_clear_field(self, request: Request) -> dict[str, object]:
+        return {"ok": True, "cleared": self.line.clear_field_report()}
+
+    def health_confirm(self, request: Request) -> dict[str, object]:
+        item_id = request.args.get("item", "")
+        if not item_id:
+            raise ApiParamError("item", item_id)
+        basis = request.args.get("basis", "residual")
+        return {"ok": True, "health": self.line.health_confirm(item_id, basis)}
 
     def weld_confirm(self, request: Request) -> dict[str, object]:
         self.line.weld_and_speedup()

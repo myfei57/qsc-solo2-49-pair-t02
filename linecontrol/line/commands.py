@@ -61,6 +61,7 @@ class CommandOps:
         return plan
 
     def resume_acid_loop(self, sample: float) -> None:
+        self.health.require("pickle")
         self.pickle.level_check(sample)
         self.pump.resume()
 
@@ -82,9 +83,11 @@ class CommandOps:
         self.weld.set_power(voltage, current)
 
     def set_strip_speed(self, speed: float) -> None:
+        self.health.require("strip")
         self.strip.set_speed(speed)
 
     def advance_strip(self, delta: float) -> float:
+        self.health.require("strip")
         return self.strip.advance(delta)
 
     def set_shear_offset(self, offset: float) -> None:

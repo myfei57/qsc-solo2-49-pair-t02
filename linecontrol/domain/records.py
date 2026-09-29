@@ -17,6 +17,26 @@ def _stamp(raw: Any) -> datetime:
     return utcnow()
 
 
+def _number(raw: Any) -> float | None:
+    """Coerce an optional JSON number; non-numeric or missing values stay None."""
+
+    if raw is None or isinstance(raw, bool):
+        return None
+    try:
+        value = float(raw)
+    except (TypeError, ValueError):
+        return None
+    return value
+
+
+def _flag(raw: Any) -> bool | None:
+    """Coerce an optional JSON boolean; other types stay None."""
+
+    if isinstance(raw, bool):
+        return raw
+    return None
+
+
 @dataclass(frozen=True, slots=True)
 class Confirm:
     """Outcome of a strip head alignment check."""
@@ -170,4 +190,51 @@ class LatchSnapshot:
             interlock=bool(raw.get("interlock", False)),
             alarm=bool(raw.get("alarm", False)),
             saved=_stamp(raw.get("saved")),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class FieldReport:
+    """Field-side readings handed to the line at start-up.
+
+    Every value is optional: a missing reading means the subsystem did not
+    report, and the health check treats that as an item the operator must
+    confirm before the line is released.
+    """
+
+    tension: float | None = None
+    gain: float | None = None
+    pump_running: bool | None = None
+    rinse_active: bool | None = None
+    acid_level: float | None = None
+    track_position: float | None = None
+    weld_latch: bool | None = None
+    weld_alarm: bool | None = None
+    reported_at: datetime = field(default_factory=utcnow)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "tension": self.tension,
+            "gain": self.gain,
+            "pumpRunning": self.pump_running,
+            "rinseActive": self.rinse_active,
+            "acidLevel": self.acid_level,
+            "trackPosition": self.track_position,
+            "weldLatch": self.weld_latch,
+            "weldAlarm": self.weld_alarm,
+            "reportedAt": self.reported_at.isoformat(),
+        }
+
+    @classmethod
+    def from_dict(cls, raw: dict[str, Any]) -> "FieldReport":
+        return cls(
+            tension=_number(raw.get("tension")),
+            gain=_number(raw.get("gain")),
+            pump_running=_flag(raw.get("pumpRunning")),
+            rinse_active=_flag(raw.get("rinseActive")),
+            acid_level=_number(raw.get("acidLevel")),
+            track_position=_number(raw.get("trackPosition")),
+            weld_latch=_flag(raw.get("weldLatch")),
+            weld_alarm=_flag(raw.get("weldAlarm")),
+            reported_at=_stamp(raw.get("reportedAt")),
         )

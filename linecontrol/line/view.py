@@ -68,6 +68,7 @@ class ViewOps:
             "alarms": self.audit.active_alarms(),
             "alarmActive": self.audit.alarm_active("weld-overcurrent"),
             "sequence": self.seq.snapshot(),
+            "health": self.health_view(),
         }
 
     def run_report(self) -> dict[str, object]:
@@ -98,6 +99,8 @@ class ViewOps:
             "backupCount": len(backups),
             "lastBackup": self.last_backup.to_dict() if self.last_backup else None,
             "dataDir": self.store.directory,
+            "restricted": self.health.restricted(),
+            "healthPending": [item.to_dict() for item in self.health.pending()],
             "sequence": self.seq.snapshot(),
             "failures": self.sequence_failures(),
             "bus": {"delivered": self.bus.delivered()},

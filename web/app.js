@@ -44,7 +44,7 @@ function setText(id, value) {
 function renderState(state) {
   const badge = document.getElementById("phase");
   badge.textContent = state.phase || "idle";
-  badge.className = "badge " + (state.phase === "fault" ? "fault" : "running");
+  badge.className = "badge " + (state.phase === "fault" ? "fault" : state.phase === "restricted" ? "restricted" : "running");
   setText("coil", state.coil || "-");
   setText("head", fmt(state.head, 1));
   setText("aligned", state.aligned ? "已确认" : "未确认");
@@ -85,6 +85,78 @@ function renderState(state) {
       alarms.appendChild(li);
     });
   }
+}
+
+function renderHealth(health) {
+  const panel = document.getElementById("recoveryPanel");
+  if (!panel) {
+    return;
+  }
+  const items = health && health.items ? health.items : [];
+  const pending = items.filter((item) => !item.confirmed);
+  const blocking = pending.filter((item) => item.severity === "blocking");
+  if (!pending.length) {
+    panel.classList.add("hidden");
+    return;
+  }
+  panel.classList.remove("hidden");
+
+  const summary = document.getElementById("recoverySummary");
+  if (blocking.length) {
+    summary.textContent =
+      "受限运行中：" +
+      blocking.length +
+      " 项阻塞待确认（" +
+      health.heldCapabilities.join("、") +
+      " 能力被锁定），另有 " +
+      (pending.length - blocking.length) +
+      " 项提示。";
+  } else {
+    summary.textContent = "产线已放开，剩余 " + pending.length + " 项提示性条目可确认：";
+  }
+
+  const list = document.getElementById("healthList");
+  list.innerHTML = "";
+  pending.forEach(function (item) {
+    const li = document.createElement("li");
+    li.className = item.severity;
+
+    const tag = document.createElement("span");
+    tag.className = "tag";
+    tag.textContent = item.severity === "blocking" ? "阻塞" : "提示";
+    li.appendChild(tag);
+
+    const detail = document.createElement("span");
+    detail.className = "detail";
+    detail.textContent =
+      item.label + "（" + item.subsystem + "）：" + item.detail +
+      "　[残留 " + item.expected + " / 现场 " + item.actual + "]";
+    li.appendChild(detail);
+
+    const hasFieldReading = item.actual && item.actual !== "现场未上报";
+    if (item.basis === "field" && hasFieldReading) {
+      li.appendChild(healthButton(item.id, "field", "按现场确认"));
+    }
+    li.appendChild(healthButton(item.id, "residual", "按残留确认"));
+    if (item.severity === "blocking") {
+      li.appendChild(healthButton(item.id, "safe", "保持安全态"));
+    }
+    list.appendChild(li);
+  });
+}
+
+function healthButton(item, basis, label) {
+  const button = document.createElement("button");
+  button.textContent = label;
+  button.addEventListener("click", async function () {
+    try {
+      await post("/api/recovery/confirm", { item: item, basis: basis });
+      await refresh();
+    } catch (error) {
+      window.alert(error.message);
+    }
+  });
+  return button;
 }
 
 function renderEvents(events) {
@@ -129,6 +201,7 @@ async function refresh() {
   try {
     const data = await loadJSON("/api/state");
     renderState(data.state || {});
+    renderHealth(data.state ? data.state.health : null);
     renderSequence(data.state ? data.state.sequence : null);
     const summary = await loadJSON("/api/audit/summary");
     renderSummary(summary.summary || {});
@@ -182,6 +255,7 @@ const FORM_CALLS = {
   "shear-offset": (form) => post("/api/exit/shear-offset", readForm(form)),
   "exit-weight": (form) => post("/api/exit/weight", readForm(form)),
   "cycle": (form) => post("/api/cycle", readForm(form)),
+  "recovery-field": (form) => post("/api/recovery/field", readForm(form)),
   "audit-query": (form) => refreshAudit(form.kind.value, form.limit.value),
 };
 

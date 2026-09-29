@@ -10,6 +10,7 @@ from ..domain.phase import Phase
 from ..dry.dryer import Dryer
 from ..entry.controller import Controller as EntryController
 from ..exit.section import Exit
+from ..health.registry import HealthRegistry
 from ..pickle.tank import Tank
 from ..pump.pump import Pump
 from ..store.filestore import FileStore
@@ -18,6 +19,7 @@ from ..tension.roller import Roller
 from ..weld.welder import Welder
 from ..store.backup import BackupSummary
 from .commands import CommandOps
+from .health import HealthOps
 from .recovery import RecoveryOps
 from .sequence import Sequence
 from .view import ViewOps
@@ -27,13 +29,14 @@ from .workflow import WorkflowOps
 DEFAULT_SETPOINT = 80.0
 
 
-class Line(WorkflowOps, CommandOps, RecoveryOps, ViewOps):
+class Line(WorkflowOps, CommandOps, HealthOps, RecoveryOps, ViewOps):
     """Owns the equipment areas and the cross-area call chains."""
 
     def __init__(self, data_dir: str | Path) -> None:
         self.store = FileStore(Path(data_dir) / "snap")
         self.bus = EventBus()
         self.audit = Logger(self.store, self.bus)
+        self.health = HealthRegistry()
         self.entry = EntryController(self.bus)
         self.tension = Roller(self.store)
         self.pickle = Tank(self.store, self.bus)

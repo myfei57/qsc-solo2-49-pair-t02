@@ -18,6 +18,14 @@ class StatusOps:
 
         self.data.machine.force("running" if snapshot.running else "stopped")
 
+    def commit_running(self, running: bool) -> None:
+        """Adopt an operator-confirmed field state and persist it."""
+
+        self.data.machine.force("running" if running else "stopped")
+        if not running:
+            self.data.started_at = None
+        self._save_state()
+
     def persisted(self) -> tuple[PumpSnapshot, bool]:
         return load_json(self.store, KEY_PUMP, PumpSnapshot)
 

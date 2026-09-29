@@ -48,6 +48,7 @@ class WorkflowOps:
         with rather than at whatever the previous seam used.
         """
 
+        self.health.require("weld", "strip")
         self.seq.begin_if_idle("weld-and-speedup")
         self.set_phase(Phase.ALIGNING)
         try:
@@ -80,6 +81,7 @@ class WorkflowOps:
         allowed to cut.
         """
 
+        self.health.require("weld", "strip")
         try:
             self.entry.align_refresh(position)
             self.weld.set_line_speed(self.strip.speed())
@@ -93,6 +95,7 @@ class WorkflowOps:
     def start_acid_loop(self, sample: float) -> None:
         """Confirm the level, start the pump and open the rinse valve."""
 
+        self.health.require("pickle")
         try:
             self.pickle.level_check(sample)
             self.seq.record("level-check")
@@ -161,6 +164,7 @@ class WorkflowOps:
     def production_cycle(self, payload: CycleInput) -> None:
         """Run load, weld, acid loop, dry and stop as one sequence."""
 
+        self.health.require("weld", "pickle", "strip")
         self.seq.begin("production")
         self.load_coil(payload.coil_id, payload.target)
         self.seq.record("stage:load-coil")

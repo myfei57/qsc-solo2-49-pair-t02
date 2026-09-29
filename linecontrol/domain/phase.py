@@ -14,6 +14,7 @@ class Phase(str, Enum):
     COIL_DONE = "coil-done"
     STOPPING = "stopping"
     RECOVERING = "recovering"
+    RESTRICTED = "restricted"
     FAULT = "fault"
 
     def __str__(self) -> str:  # pragma: no cover - trivial formatting helper

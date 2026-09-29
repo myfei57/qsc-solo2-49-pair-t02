@@ -36,6 +36,12 @@ class RinseOps:
     def restore_rinse(self, active: bool) -> None:
         self.data.valve_open = active
 
+    def commit_rinse(self, active: bool) -> None:
+        """Adopt an operator-confirmed valve state and persist it."""
+
+        self.data.valve_open = bool(active)
+        self._save_rinse()
+
     def rinse_persisted(self) -> tuple[RinseSnapshot, bool]:
         return load_json(self.store, KEY_RINSE, RinseSnapshot)
 

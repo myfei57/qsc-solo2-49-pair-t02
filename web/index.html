@@ -17,6 +17,51 @@
   <button class="tab" data-tab="audit">记录查询</button>
 </nav>
 <main>
+  <section id="recoveryPanel" class="panel recovery hidden" style="grid-column: 1 / -1;">
+    <h2>重启体检 · 待确认清单</h2>
+    <p id="recoverySummary" class="recovery-summary"></p>
+    <ul id="healthList" class="health"></ul>
+    <form class="inline" data-form="recovery-field" style="grid-column: 1 / -1;">
+      <label>张力设定<input name="tension" type="number" step="0.5" placeholder="现场读数"></label>
+      <label>张力增益<input name="gain" type="number" step="0.01" placeholder="现场读数"></label>
+      <label>酸泵
+        <select name="pumpRunning">
+          <option value="">未上报</option>
+          <option value="true">运行</option>
+          <option value="false">停止</option>
+        </select>
+      </label>
+      <label>喷淋阀
+        <select name="rinseActive">
+          <option value="">未上报</option>
+          <option value="true">开</option>
+          <option value="false">关</option>
+        </select>
+      </label>
+      <label>槽体液位<input name="acidLevel" type="number" step="0.1" placeholder="现场读数"></label>
+      <label>跟踪点<input name="trackPosition" type="number" step="0.5" placeholder="现场读数"></label>
+      <label>焊接联锁
+        <select name="weldLatch">
+          <option value="">未上报</option>
+          <option value="true">锁定</option>
+          <option value="false">释放</option>
+        </select>
+      </label>
+      <label>过流告警
+        <select name="weldAlarm">
+          <option value="">未上报</option>
+          <option value="true">有</option>
+          <option value="false">无</option>
+        </select>
+      </label>
+      <button type="submit">提交现场读数并复检</button>
+    </form>
+    <p class="recovery-hint">
+      每条对不上的项，按现场实际情况选择：
+      <b>按现场确认</b>（以读数为准）、<b>按残留确认</b>（以落盘为准）或
+      <b>保持安全态</b>（不恢复该项）。全部阻塞项确认完自动放开产线。
+    </p>
+  </section>
   <section id="tab-overview" class="tabpage">
     <div class="panel">
       <h2>产线状态</h2>
